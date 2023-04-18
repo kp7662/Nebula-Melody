@@ -54,7 +54,7 @@ countLoop:
     // iChar = getchar()
     bl      getchar
     adr     x1, iChar
-    str     x0, [x1]
+    str     w0, [x1]
 
     // if((iChar = getchar()) == EOF) goto countLoopEnd;
     adr     x0, iChar
@@ -64,9 +64,9 @@ countLoop:
 
     // lCharCount++;
     adr     x0, lCharCount
-    ldr     x0, [x0]
-    add     x0, x0, 1
-    str     x0, [x0]
+    ldr     x1, [x0]
+    add     x1, x1, 1
+    str     x1, [x0]
 
     // if(!isspace(iChar)) goto else1;
     adr     x0, iChar
@@ -83,13 +83,12 @@ countLoop:
 
     // lWordCount++;
     adr     x0, lWordCount
-    ldr     x0, [x0]
-    add     x0, x0, 1
-    str     x0, [x0]
+    ldr     x1, [x0]
+    add     x1, x1, 1
+    str     x1, [x0]
 
     // iInWord = FALSE;
     adr     x0, iInWord
-    ldr     w0, [x0]
     mov     w1, FALSE
     str     w1, [x0] 
 
@@ -156,3 +155,4 @@ endif4:
     ret
     
     .size main, (. - main)
+    

@@ -33,23 +33,21 @@ countLoop:
     lCharCount++;
     if(!isspace(iChar)) goto else1;
     if(!iInWord) goto endif2;
-        lWordCount++;
-        iInWord = FALSE;
-        goto endif2;
-    else1:
+    lWordCount++;
+    iInWord = FALSE;
+    goto endif2;
+else1:
     if(iInWord) goto endif2;
-        iInWord = TRUE;
-    endif2:
+    iInWord = TRUE;
+endif2:
     if(iChar != '\n') goto endif3;
-        lLineCount++;
-    endif3:
+    lLineCount++;
+endif3:
     goto countLoop;
 countLoopEnd:
-
-if (!iInWord) goto endif4;
+    if (!iInWord) goto endif4;
     lWordCount++;
 endif4: 
-
 printf("%7ld %7ld %7ld\n", lLineCount, lWordCount, lCharCount);
 return 0;
    
