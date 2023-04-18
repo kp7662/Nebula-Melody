@@ -90,19 +90,69 @@ countLoop:
     // iInWord = FALSE;
     adr     x0, iInWord
     ldr     w0, [x0]
-    str     FALSE, [x0]
+    mov     w1, FALSE
+    str     w1, [x0] 
 
     // goto endif2;
     b       endif2
 
 else1:
     // if(iInWord) goto endif2;
+    adr     x0, iInWord
+    ldr     w0, [x0]
+    cmp     w0, TRUE
+    beq     endif2
 
+    // iInWord = TRUE;
+    adr     x0, iInWord
+    mov     w1, TRUE
+    str     w1, [x0]
 
+endif2:
+    // if(iChar != '\n') goto endif3;
+    adr     x0, iChar
+    ldr     w0, [x0]
+    cmp     w0, '\n'
+    bne     endif3
+
+    // lLineCount++;
+    adr     x0, lLineCount
+    ldr     x1, [x0]
+    add     x1, x1, 1
+    str     x1, [x0]
+
+endif3:
+    // goto countLoop;
+    b   countLoop
 
 countLoopEnd:
+    // if (!iInWord) goto endif4;
+    adr     x0, iInWord
+    ldr     w0, [x0]
+    cmp     w0, FALSE
+    beq     endif4
 
+    // lWordCount++;
+    adr     x0, lWordCount
+    ldr     x1, [x0]
+    add     x1, x1, 1
+    str     x1, [x0]
 
+endif4: 
+    // printf("%7ld %7ld %7ld\n", lLineCount, lWordCount, lCharCount);
+    adr     x0, printfFormatStr
+    adr     x1, lLineCount
+    ldr     x1, [x1]
+    adr     x2, lWordCount
+    ldr     x2, [x2]
+    adr     x3, lCharCount
+    ldr     x3, [x3]
+    bl      printf
 
-
-
+    // Epilog and return 0
+    mov     w0, 0
+    ldr     x30, [sp]
+    add     sp, sp, MAIN_STACK_BYTECOUNT
+    ret
+    
+    .size main, (. - main)
