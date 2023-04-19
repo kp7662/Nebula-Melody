@@ -49,5 +49,5 @@ countLoopEnd:
     lWordCount++;
 endif4: 
     printf("%7ld %7ld %7ld\n", lLineCount, lWordCount, lCharCount);
-    return 0;
+    return 0; 
 }
