@@ -49,6 +49,7 @@ int main(void)
          lLineCount++;
    }
 
+   /* end with charcters */
    if (iInWord)
       lWordCount++;
 
