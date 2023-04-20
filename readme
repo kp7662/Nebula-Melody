@@ -96,7 +96,7 @@ mywcboundary5.txt: This file only contains two space characters, so the
 computer should output 0 0 2. 
 
 Statement Tests
-mywcproverb1.txt: 
+mywcstatement1.txt: 
 
 This file is not an empty file, so causes the computer to execute lines 
 32 and 34 of the given mywc.c file. 
@@ -124,8 +124,20 @@ and 57 by default.
 
 Note: The descriptions ignore lines with empty space, comments, and curly brackets.
 
-
 Stress Tests
+
+mywcstress1.txt:
+
+This file randomly generates 50,000 printable ASCII characters. This file
+stresses the largest amount of character a test file can contain, which
+is 50,000. 
+
+mywcstress2.txt: 
+
+This file generates 1000 newline characters, '\n'. By doing so, 
+the file stresses the largest amount of lines a test file can contain, 
+which is 50,000. 
+
 
 ------------------------------------------------------------------------
 What are the CPU times consumed by the programs from Parts 2a, 2b, 2d,

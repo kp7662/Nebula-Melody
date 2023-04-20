@@ -8,7 +8,9 @@ int main(void)
     int lineCount = 0;
     int mod = 0x7F;
 
-   while ((charCount < 50000)) {
+    /*srand(atol(argv[1])*/
+
+   while ((charCount < 50000) && (lineCount < 1000)) {
         num = rand();
         num = num % mod;
 
@@ -16,12 +18,10 @@ int main(void)
             lineCount++;
             charCount++;
             printf("%c", num);
-        } 
-        else if (((num == 0x09) || (num >= 0x20 && num <= 0x7E)) && (charCount <= 50000)) {
+        } else if (((num == 0x09) || (num >= 0x20 && num <= 0x7E)) && (charCount <= 50000)) {
             charCount++;
             printf("%c", num);
         }
-        if (lineCount == 1000) break;
    }
    return 0; 
 }
