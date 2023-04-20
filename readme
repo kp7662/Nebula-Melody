@@ -3,11 +3,12 @@ Assignment 5 readme File
 ------------------------------------------------------------------------
 Student 1: What is your name?
 
-
+Kok Wei Pua
 
 ------------------------------------------------------------------------
 Student 2: What is your name?
 
+Cherie
 
 
 ------------------------------------------------------------------------
@@ -40,7 +41,7 @@ nature of the interaction, may additionally require the interaction
 being reported to the Committee on Discipline. Write "None" if you used
 no unauthorized sources of information.
 
-
+None.
 
 ------------------------------------------------------------------------
 Student 2: What unauthorized sources of information did you use to
@@ -54,13 +55,13 @@ nature of the interaction, may additionally require the interaction
 being reported to the Committee on Discipline. Write "None" if you used
 no unauthorized sources of information.
 
-
+None. 
 
 ------------------------------------------------------------------------
 Student 1: What is your assessment of the assignment? Was it helpful?
 Was it fun?
 
-
+Yeah, it was kinda fun.
 
 ------------------------------------------------------------------------
 Student 2: What is your assessment of the assignment? Was it helpful?
@@ -78,7 +79,53 @@ particular, what bugs are in your submission?
 ------------------------------------------------------------------------
 What is your mywc program test plan?
 
+Boundary Tests
+mywcboundary1.txt: This file is an empty file, so the computer should output
+0 0 0.
 
+mywcboundary2.txt: This file only contains an empty space, so the computer 
+should output 0 0 1. 
+
+mywcboundary3.txt: This file only contains a character 'L', so the computer 
+should output 0 1 1. 
+
+mywcboundary4.txt: This file only contains two newline characters, so the 
+computer should output 2 0 2. 
+
+mywcboundary5.txt: This file only contains two space characters, so the 
+computer should output 0 0 2. 
+
+Statement Tests
+mywcproverb1.txt: 
+
+This file is not an empty file, so causes the computer to execute lines 
+32 and 34 of the given mywc.c file. 
+
+This file contains newline characters, so causes the computer to also execute 
+lines 48 and 49.
+
+This file contains a space character, so causes the computer to also execute 
+line 36 of the given mywc.c file. 
+
+This file contains a word followed by a space character, causes the computer 
+to also execute lines 38 and 39. 
+
+This file contains characters that are not a space chacacter, so causes 
+the computer to also execute lines 42 and 44. 
+
+This file contains a newline character followed by a space character, causes
+the computer to also execute lines 45.
+
+This file ends with a word, but not a newline character, so causes the computer 
+to also execute lines 53 and 54.
+
+This file will also execute lines 6, 7, 12, 16, 17, 18, 19, 20, 28, 30, 56, 
+and 57 by default.
+
+Note: The descriptions ignore lines with empty space, comments, and curly brackets.
+
+
+Stress Tests
 
 ------------------------------------------------------------------------
 What are the CPU times consumed by the programs from Parts 2a, 2b, 2d,

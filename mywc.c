@@ -29,7 +29,7 @@ int main(void)
 {
    while ((iChar = getchar()) != EOF)
    {
-      lCharCount++;
+      lCharCount++; 
 
       if (isspace(iChar))
       {
