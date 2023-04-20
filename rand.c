@@ -8,19 +8,20 @@ int main(void)
     int lineCount = 0;
     int mod = 0x7F;
 
-   while ((charCount < 50000) && (lineCount < 1000)) {
+   while ((charCount < 50000)) {
         num = rand();
         num = num % mod;
 
-        if((num == 0x09) || (num == 0x0A) || (num >= 0x20 && num <= 0x7E)) {
+       if (num == 0x0A && (lineCount <= 1000)) {
+            lineCount++;
+            charCount++;
             printf("%c", num);
-            if (num == 0x0A) {
-                lineCount++;
-            }
-            else {
-                charCount++;
-            }
+        } 
+        else if (((num == 0x09) || (num >= 0x20 && num <= 0x7E)) && (charCount <= 50000)) {
+            charCount++;
+            printf("%c", num);
         }
+        if (lineCount == 1000) break;
    }
    return 0; 
 }
