@@ -470,11 +470,11 @@ int main(int argc, char *argv[])
 
    /* Compute and write fibonacci number iNum. */
 
-   iInitialClock = clock();
+   /* iInitialClock = clock();
    computeFib(iNum);
    iFinalClock = clock();
    fprintf(stderr, "CPU time:  %f seconds\n",
-      ((double)(iFinalClock - iInitialClock)) / CLOCKS_PER_SEC);
+      ((double)(iFinalClock - iInitialClock)) / CLOCKS_PER_SEC); */
 
    printf("------------------------------------------------\n");
 
