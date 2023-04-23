@@ -31,21 +31,26 @@
     // Must be a multiple of 16
     .equ    BIGINT_LARGER_STACK_BYTECOUNT, 32
 
-    // Local variable stack offsets:
-    .equ    lLarger, 8
+    // Local variable registers:
+    lLarger     .req    x21 // Callee-saved
 
-    // Parameter stack offsets: 
-    .equ lLength1, 16
-    .equ lLength2, 24
+    // Parameter registers: 
+    lLength1    .req    x19 // Callee-saved
+    lLength2    .req    x20 // callee-saved
 
 BigInt_larger:
     
     // Prolog
     sub     sp, sp, BIGINT_LARGER_STACK_BYTECOUNT
     str     x30, [sp]
-    str     x0, [sp, lLength1]
-    str     x1, [sp, lLength2]
+    str     x19, [sp, 8]
+    str     x20, [sp, 16]
+    str     x21, [sp, 24]
 
+    // store parameters in registers
+    mov     lLength1, x19
+    mov     lLength2, x20
+    
     // long lLarger
     
     // if (lLength1 <= lLength2) goto else1;
@@ -53,8 +58,7 @@ BigInt_larger:
     ble     else1
 
     // lLarger = lLength1;
-    ldr     x0, [sp, lLength1]
-    str     x0, [sp, lLarger]
+    mov     lLarger, lLength1
 
     // goto endif1;
     b       endif1
@@ -62,14 +66,16 @@ BigInt_larger:
 else1:
 
     // lLarger = lLength2;
-    ldr     x0, [sp, lLength2]
-    str     x0, [sp, lLarger]
+    mov     lLarger, lLarger2
 
 endif1:
 
     // Epilog and return lLarger;
-    ldr     x0, [sp, lLarger]
+    mov     x0, lLarger
     ldr     x30, [sp]
+    ldr     x19, [sp, 8]
+    ldr     x20, [sp, 16]
+    ldr     x21, [sp, 24]
     add     sp, sp, BIGINT_LARGER_STACK_BYTECOUNT
     ret 
 
@@ -85,16 +91,17 @@ endif1:
     // Must be a multiple of 16
     .equ    BIGINT_ADD_STACK_BYTECOUNT, 64
 
-    // Local variable stack offsets:
-    .equ    ulCarry, 8
-    .equ    ulSum, 16
-    .equ    lIndex, 24
-    .equ    lSumLength, 32
+    // Local variable registers:
+    // Can we reuse register from the other function
+    ulCarry     .req    x25 // Callee-saved
+    ulSum       .req    x26 // Callee-saved
+    lIndex      .req    x27 // Callee-saved
+    lSumLength  .req    x28 // Callee-saved
 
-    // Parameter stack offsets: 
-    .equ oAddend1, 40
-    .equ oAddend2, 48
-    .equ oSum, 56
+    // Parameter stack registers: 
+    oAddend1    .req    x22 // Callee-saved
+    oAddend2    .req    x23 // Callee-saved
+    oSum        .req    x24 // Callee-saved
 
     .global BigInt_add
 
@@ -103,95 +110,95 @@ BigInt_add:
     // Prolog
     sub     sp, sp, BIGINT_ADD_STACK_BYTECOUNT
     str     x30, [sp]
-    str     x0, [sp, oAddend1]
-    str     x1, [sp, oAddend2]
-    str     x2, [sp, oSum]
+    str     x22, [sp, 8]
+    str     x23, [sp, 16]
+    str     x24, [sp, 24]
+    str     x25, [sp, 32]
+    str     x26, [sp, 40]
+    str     x27, [sp, 48]
+    str     x28, [sp, 56]
+
+    // Store parameters in registers 
+    mov     oAddend1, x0
+    mov     oAddend2, x1
+    mov     oSum, x2
 
     // lSumLength = BigInt_larger(oAddend1->lLength, oAddend2->lLength);
-    ldr     x0, [sp, oAddend1]
     ldr     x0, [x0]
-    ldr     x1, [sp, oAddend2]
     ldr     x1, [x1]
     bl      BigInt_larger
-    str     x0, [sp, lSumLength] 
+    mov     lSumLength, x0
 
     // if (oSum->lLength <= lSumLength) goto endif2;
-    ldr     x0, [sp, oSum]
-    ldr     x0, [x0]
-    ldr     x1, [sp, lSumLength]
-    cmp     x0, x1
+    ldr     x2, [x2]
+    mov     x3, lSumLength
+    cmp     x2, x3
     ble     endif2
 
     // memset(oSum->aulDigits, 0, MAX_DIGITS * sizeof(unsigned long));
-    ldr     x0, [sp, oSum]
-    add     x0, x0, ARRAY_OFFSET //arrayoffset later
-    mov     x1, 0
-    mov     x2, MAX_DIGITS
-    mov     x3, SIZE_UNSIGNED_LONG
-    mul     x2, x2, x3 
-    bl      memset 
+    mov     x2, oSum
+    add     x2, x2, ARRAY_OFFSET
+    mov     x3, 0
+    mov     x4, MAX_DIGITS
+    mov     x5, SIZE_UNSIGNED_LONG
+    mul     x4, x4, x5
+    bl      memset // How does memset know which register to use?
 
 endif2: 
     // ulCarry = 0;
-    mov     x0, 0
-    str     x0, [sp, ulCarry]
+    mov     ulCarry, 0
 
     // lIndex = 0;
-    str     x0, [sp, lIndex]
+    mov     lIndex, 0
 
 addLoop:
 
     // if (lIndex >= lSumLength) goto addLoopEnd;
-    ldr     x0, [sp, lIndex]
-    ldr     x1, [sp, lSumLength]
-    cmp     x0, x1
+    // Can we override the value of the register set for the parameters
+    mov     x3, lIndex
+    mov     x4, lSumLength
+    cmp     x3, x4
     bge     addLoopEnd
 
     // ulSum = ulCarry;
-    ldr     x0, [sp, ulCarry]
-    str     x0, [sp, ulSum]
+    mov     ulSum, ulCarry
 
     // ulCarry = 0;
-    mov     x0, 0
-    str     x0, [sp, ulCarry]
+    mov     ulCarry, 0
 
-    // Need to double check
+    // Need to check
     // ulSum += oAddend1->aulDigits[lIndex];
-    ldr     x0, [sp, ulSum]     // put ulSum pointer into x0
-    ldr     x1, [sp, oAddend1]  // put oAddend1 pointer into x1
-    add     x1, x1, ARRAY_OFFSET   // add array offset (maybe .equ Arrayoffset 8)
-    ldr     x2, [sp, lIndex]    // put lIndex pointer into x2
-    ldr     x1, [x1, x2, lsl 3] // put oAddend1->aulDigits[lIndex] into x1
-    add     x0, x0, x1          // add oAddend1->aulDigits[lIndex] to ulSum
-    str     x0, [sp, ulSum]     // store result into ulSum 
+    mov     x3, ulSum
+    add     x0, x0, ARRAY_OFFSET
+    mov     x4, lIndex
+    ldr     x0, [x0, x4, lsl 3]
+    add     x3, x3, x0
+    mov     ulSum, x3
+ 
 
     //if(ulSum >= oAddend1->aulDigits[lIndex]) goto endif3;
-    cmp     x0, x1
+    cmp     x3, x0
     bhs     endif3
 
     //ulCarry = 1;
-    mov     x0, 1
-    str     x0, [sp, ulCarry]
+    mov     ulCarry, 1
 
 endif3:
-    // pending confirmation from Line 152
     // ulSum += oAddend2->aulDigits[lIndex];
-    ldr     x0, [sp, ulSum]     // put ulSum pointer into x0
-    ldr     x1, [sp, oAddend2]  // put oAddend2 pointer into x1
-    add     x1, x1, ARRAY_OFFSET  // add array offset (maybe .equ Arrayoffset 8)
-    ldr     x2, [sp, lIndex]    // put lIndex pointer into x2
-    ldr     x1, [x1, x2, lsl 3] // put oAddend1->aulDigits[lIndex] into x1
-    add     x0, x0, x1          // add oAddend1->aulDigits[lIndex] to ulSum
-    str     x0, [sp, ulSum] 
+    mov     x3, ulSum
+    add     x1, x1, ARRAY_OFFSET
+    mov     x4, lIndex
+    ldr     x1, [x1, x4, lsl 3]
+    add     x3, x3, x1
+    mov     ulSum, x3
+ 
 
-    // follow the one above
-    // if(ulSum >= oAddend1->aulDigits[lIndex]) goto endif4;
-    cmp     x0, x1
-    bhs     endif4
+    //if(ulSum >= oAddend2->aulDigits[lIndex]) goto endif3;
+    cmp     x3, x1
+    bhs     endif3
 
     //ulCarry = 1;
-    mov     x0, 1
-    str     x0, [sp, ulCarry]
+    mov     ulCarry, 1
 
 endif4:
 
