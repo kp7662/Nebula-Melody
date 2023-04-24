@@ -48,9 +48,8 @@ BigInt_larger:
     str     x21, [sp, 24]
 
     // store parameters in registers
-    // do we need this?
-    mov     lLength1, x19
-    mov     lLength2, x20
+    mov     lLength1, x0
+    mov     lLength2, x1
     
     // long lLarger
     
@@ -111,7 +110,7 @@ BigInt_add:
     // Prolog
     sub     sp, sp, BIGINT_ADD_STACK_BYTECOUNT
     str     x30, [sp]
-    str     x10, [sp, 8]
+    str     x19, [sp, 8]
     str     x20, [sp, 16]
     str     x21, [sp, 24]
     str     x22, [sp, 32]
@@ -168,7 +167,6 @@ addLoop:
 
     // Need to check
     // ulSum += oAddend1->aulDigits[lIndex];
-    mov     x0, oAddend1
     add     x0, oAddend1, ARRAY_OFFSET
     ldr     x0, [x0, lIndex, lsl 3]
     add     ulSum, ulSum, x0
@@ -182,14 +180,13 @@ addLoop:
 
 endif3:
     // ulSum += oAddend2->aulDigits[lIndex];
-    mov     x0, oAddend2
     add     x0, oAddend2, ARRAY_OFFSET
     ldr     x0, [x0, lIndex, lsl 3]
     add     ulSum, ulSum, x0
  
     //if(ulSum >= oAddend2->aulDigits[lIndex]) goto endif4;  
     cmp     ulSum, x0
-    bhs     endif3
+    bhs     endif4
 
     //ulCarry = 1;
     mov     ulCarry, 1
@@ -197,10 +194,8 @@ endif3:
 endif4:
 
     // oSum->aulDigits[lIndex] = ulSum;
-    mov     x0, oSum
-    add     x0, x0, ARRAY_OFFSET
-    ldr     x0, [x0, lIndex, lsl 3]
-    mov     x0, ulSum
+    add     x0, oSum, ARRAY_OFFSET
+    str     ulSum, [x0, lIndex, lsl 3]
 
     //lIndex++;
     add     lIndex, lIndex, 1
@@ -225,10 +220,9 @@ addLoopEnd:
 endif6:
 
    // oSum->aulDigits[lSumLength] = 1;
-    mov      x0, oSum
-    add      x0, x0, ARRAY_OFFSET
-    ldr      x0, [x0, lIndex, lsl 3]  
-    mov      x0, 1
+    add      x0, oSum, ARRAY_OFFSET 
+    mov      x1, 1 
+    str      x1, [x0, lSumLength, lsl 3]
 
    // lSumLength++;
     add     lSumLength, lSumLength, 1
@@ -236,9 +230,7 @@ endif6:
 endif5:
 
     // oSum->lLength = lSumLength;
-    mov     x0, oSum
-    ldr     x0, [oSum]
-    mov     x0, lSumLength
+    str     lSumLength, [oSum]
 
     
     //return TRUE;
@@ -246,13 +238,13 @@ endif5:
 
 epilog:
     ldr     x30, [sp]
-    ldr     x22, [sp, 8]
-    ldr     x23, [sp, 16]
-    ldr     x24, [sp, 24]
-    ldr     x25, [sp, 32]
-    ldr     x26, [sp, 40]
-    ldr     x27, [sp, 48]
-    ldr     x28, [sp, 56]
+    ldr     x19, [sp, 8]
+    ldr     x20, [sp, 16]
+    ldr     x21, [sp, 24]
+    ldr     x22, [sp, 32]
+    ldr     x23, [sp, 40]
+    ldr     x24, [sp, 48]
+    ldr     x25, [sp, 56]
     add     sp, sp, BIGINT_ADD_STACK_BYTECOUNT
     ret 
 
