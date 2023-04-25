@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// bigintaddopt.s                                                             
+// bigintaddoptopt.s                                                             
 // Author: Kok Wei Pua and Cherie Jiraphanphong                       
 //--------------------------------------------------------------------
     .equ FALSE, 0
@@ -23,64 +23,6 @@
 //--------------------------------------------------------------------
     
     .section .text
-     
-    //----------------------------------------------------------------
-    // Return the larger of lLength1 and lLength2. 
-    //----------------------------------------------------------------
-
-    // Must be a multiple of 16
-    .equ    BIGINT_LARGER_STACK_BYTECOUNT, 32
-
-    // Local variable registers:
-    lLarger     .req    x21 // Callee-saved
-
-    // Parameter registers: 
-    lLength1    .req    x19 // Callee-saved
-    lLength2    .req    x20 // callee-saved
-
-BigInt_larger:
-    
-    // Prolog
-    sub     sp, sp, BIGINT_LARGER_STACK_BYTECOUNT
-    str     x30, [sp]
-    str     x19, [sp, 8]
-    str     x20, [sp, 16]
-    str     x21, [sp, 24]
-
-    // store parameters in registers
-    mov     lLength1, x0
-    mov     lLength2, x1
-    
-    // long lLarger
-    
-    // if (lLength1 <= lLength2) goto else1;
-    cmp     lLength1, lLength2
-    ble     else1
-
-    // lLarger = lLength1;
-    mov     lLarger, lLength1
-
-    // goto endif1;
-    b       endif1
-
-else1:
-
-    // lLarger = lLength2;
-    mov     lLarger, lLength2
-
-endif1:
-
-    // Epilog and return lLarger;
-    mov     x0, lLarger
-    ldr     x30, [sp]
-    ldr     x19, [sp, 8]
-    ldr     x20, [sp, 16]
-    ldr     x21, [sp, 24]
-    add     sp, sp, BIGINT_LARGER_STACK_BYTECOUNT
-    ret 
-
-    .size BigInt_larger, (. - BigInt_larger)
-
     
     //----------------------------------------------------------------
     // Assign the sum of oAddend1 and oAddend2 to oSum.  oSum should be
@@ -92,11 +34,11 @@ endif1:
     .equ    BIGINT_ADD_STACK_BYTECOUNT, 64
 
     // Local variable registers:
-    // Can we reuse register from the other function --> Can reuse 
     ulCarry     .req    x22 // Callee-saved
     ulSum       .req    x23 // Callee-saved
     lIndex      .req    x24 // Callee-saved
     lSumLength  .req    x25 // Callee-saved
+    lLarger     .req    x26 // Callee-saved
 
     // Parameter stack registers: 
     oAddend1    .req    x19 // Callee-saved
@@ -117,6 +59,7 @@ BigInt_add:
     str     x23, [sp, 40]
     str     x24, [sp, 48]
     str     x25, [sp, 56]
+    str     x26, [sp, 64]
 
     // Store parameters in registers 
     mov     oAddend1, x0
@@ -126,8 +69,23 @@ BigInt_add:
     // lSumLength = BigInt_larger(oAddend1->lLength, oAddend2->lLength);
     ldr     x0, [oAddend1] 
     ldr     x1, [oAddend2] 
-    bl      BigInt_larger
-    mov     lSumLength, x0
+
+    // if (lLength1 <= lLength2) goto else1;
+    cmp     x0, x1
+    ble     else1
+
+    // lLarger = lLength1;
+    mov     lLarger, x0
+    b       endif1
+
+else1:
+    // lLarger = lLength2;
+    mov     lLarger, x1
+
+endif1:
+
+    // return lLarger to lSumLength
+    mov     lSumLength, lLarger
 
     // if (oSum->lLength <= lSumLength) goto endif2;
     ldr     x2, [oSum]
@@ -153,24 +111,20 @@ endif2:
     // lIndex = 0;
     mov     lIndex, 0
 
-addLoop:
 
-    // if (lIndex >= lSumLength) goto addLoopEnd;
-    cmp     lIndex, lSumLength
-    bge     addLoopEnd
-
-    // ulSum = ulCarry;
+do: 
+     
+     // ulSum = ulCarry;
     mov     ulSum, ulCarry
 
     // ulCarry = 0;
     mov     ulCarry, 0
 
-    // Need to check
     // ulSum += oAddend1->aulDigits[lIndex];
     add     x0, oAddend1, ARRAY_OFFSET
     ldr     x0, [x0, lIndex, lsl 3]
     add     ulSum, ulSum, x0
- 
+
     //if(ulSum >= oAddend1->aulDigits[lIndex]) goto endif3;
     cmp     ulSum, x0
     bhs     endif3
@@ -198,10 +152,17 @@ endif4:
     str     ulSum, [x0, lIndex, lsl 3]
 
     //lIndex++;
-    add     lIndex, lIndex, 1
+    add     lIndex, lIndex, 1    
+    
+    // if (lIndex >= lSumLength) goto addLoopEnd;
+    cmp     lIndex, lSumLength
+    bge     addLoopEnd
 
-    //goto addLoop;
-    b       addLoop
+addloop: 
+
+    // if (lIndex < lSumLength) goto do 
+    cmp     lIndex, lSumLength
+    blt     do
 
 addLoopEnd:
 
@@ -245,6 +206,7 @@ epilog:
     ldr     x23, [sp, 40]
     ldr     x24, [sp, 48]
     ldr     x25, [sp, 56]
+    ldr     x26, [sp, 64]
     add     sp, sp, BIGINT_ADD_STACK_BYTECOUNT
     ret 
 
