@@ -34,10 +34,11 @@
     .equ    BIGINT_ADD_STACK_BYTECOUNT, 64
 
     // Local variable registers:
-    ulSum       .req    x22 // Callee-saved
-    lIndex      .req    x23 // Callee-saved
-    lSumLength  .req    x24 // Callee-saved
-    lLarger     .req    x25 // Callee-saved
+    ulCarry     .req    x22 // Callee-saved
+    ulSum       .req    x23 // Callee-saved
+    lIndex      .req    x24 // Callee-saved
+    lSumLength  .req    x25 // Callee-saved
+    lLarger     .req    x26 // Callee-saved
 
     // Parameter stack registers: 
     oAddend1    .req    x19 // Callee-saved
@@ -58,6 +59,7 @@ BigInt_add:
     str     x23, [sp, 40]
     str     x24, [sp, 48]
     str     x25, [sp, 56]
+    str     x26, [sp, 64]
 
     // Store parameters in registers 
     mov     oAddend1, x0
@@ -99,64 +101,66 @@ endif1:
     mul     x2, x2, x3
     bl      memset
 
-endif2: 
 
-    // Set carry to 0
-    cmp    xzr, xzr
+endif2: 
+    // ulCarry = 0;
+    mov     ulCarry, 0
 
     // lIndex = 0;
-    mov     lIndex, 0 
-    
-    // if (lIndex == lSumLength) goto addLoopEnd;
-    sub    x1, lSumLength, lIndex
-    cbz    x1, addLoopEnd    
+    mov     lIndex, 0
+
 
 addLoop: 
+     
+     // ulSum = ulCarry;
+    mov     ulSum, ulCarry
 
-    // ulSum = ulCarry;
-    adcs    ulSum, xzr, xzr
-    
-    // Set carry to 0
-    cmp     xzr, xzr 
-    
+    // ulCarry = 0;
+    mov     ulCarry, 0
+
     // ulSum += oAddend1->aulDigits[lIndex];
     add     x0, oAddend1, ARRAY_OFFSET
     ldr     x0, [x0, lIndex, lsl 3]
-    adcs    ulSum, ulSum, x0
+    add     ulSum, ulSum, x0
 
-    // oAddend2->aulDigits[lIndex];
+    //if(ulSum >= oAddend1->aulDigits[lIndex]) goto endif3;
+    cmp     ulSum, x0
+    bhs     endif3
+
+    //ulCarry = 1;
+    mov     ulCarry, 1
+
+endif3:
+    // ulSum += oAddend2->aulDigits[lIndex];
     add     x0, oAddend2, ARRAY_OFFSET
     ldr     x0, [x0, lIndex, lsl 3]
+    add     ulSum, ulSum, x0
+ 
+    //if(ulSum >= oAddend2->aulDigits[lIndex]) goto endif4;  
+    cmp     ulSum, x0
+    bhs     endif4
 
-    // if (carry == 1) goto else
-    bhs     else 
-    
-    // ulSum += oAddend2->aulDigits[lIndex] when carry is 0;
-    adcs    ulSum, ulSum, x0
-    b       endif3
+    //ulCarry = 1;
+    mov     ulCarry, 1
 
-else: 
-
-    // ulSum += oAddend2->aulDigits[lIndex] when carry is 1;
-    adds    ulSum, ulSum, x0
-
-endif3: 
+endif4:
 
     // oSum->aulDigits[lIndex] = ulSum;
     add     x0, oSum, ARRAY_OFFSET
     str     ulSum, [x0, lIndex, lsl 3]
 
     //lIndex++;
-    add     lIndex, lIndex, 1    
+    add     lIndex, lIndex, 1   
 
-    // if (lIndex < lSumLength) goto addLoop;
-    sub     x1, lSumLength, lIndex
-    cbnz    x1, addLoop
+    // if (lIndex < lSumLength) goto addLoop 
+    cmp     lIndex, lSumLength
+    blt     addLoop
 
 addLoopEnd:
 
     // if (ulCarry != 1) goto endif5;
-    blo     endif5
+    cmp     ulCarry, 1
+    bne     endif5
 
     // if (lSumLength != MAX_DIGITS) goto endif6;
     cmp     lSumLength, MAX_DIGITS
@@ -181,7 +185,7 @@ endif5:
     // oSum->lLength = lSumLength;
     str     lSumLength, [oSum]
 
-   
+    
     //return TRUE;
     mov     w0, TRUE
 
@@ -194,6 +198,7 @@ epilog:
     ldr     x23, [sp, 40]
     ldr     x24, [sp, 48]
     ldr     x25, [sp, 56]
+    ldr     x26, [sp, 64]
     add     sp, sp, BIGINT_ADD_STACK_BYTECOUNT
     ret 
 
